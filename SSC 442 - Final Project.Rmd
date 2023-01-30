@@ -1,0 +1,54 @@
+---
+title: "SSC 442 - Final Project"
+author: "Peter Fu Chen , Mike Liu"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+PowerPoint reference: https://www.linkedin.com/in/hoyuli/overlay/1593491717863/single-media-viewer/?profileId=ACoAABGobQoBad3aoz8Aka2DErr_wx3A9UJhl50
+
+Analysis reference: https://www.kaggle.com/datasets/mysarahmadbhat/nyc-traffic-accidents/code
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# ___NYC Traffic Accidents Analysis___
+
+## Background and Motivation
+
+The focus of this project is the examination of motor vehicle collisions that were reported by the New York City Police Department from January to August of 2020. Each record in the dataset, obtained from Kaggle, represents a unique collision and includes various details such as the date, time, and location of the accident, as well as additional data.
+
+The analysis will compare the percentage of total accidents by month, providing a snapshot of the trend over time. These statistics will be visually represented through the use of maps, which will demonstrate the frequency of accidents in different boroughs of New York City. Furthermore, the analysis will also determine the most common streets, days, and times when accidents are likely to occur.
+
+The ultimate goal of this project is to provide recommendations to the city of New York on how this analysis can be used to prevent future accidents. By highlighting the most common accident hotspots, times, and contributing factors, city planners and law enforcement officials will be equipped with the information necessary to implement effective safety measures and reduce the number of accidents in the city.
+
+
+## Methodology
+
+*Installation*
+```{r}
+library(tidyverse)
+library(ggthemes)
+```
+
+## Results
+
+
+### References
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
