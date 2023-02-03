@@ -14,7 +14,7 @@ Analysis reference: https://www.kaggle.com/datasets/mysarahmadbhat/nyc-traffic-a
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# ___NYC Traffic Accidents Analysis___
+# NYC Traffic Accidents Analysis
 
 ## Background and Motivation
 
@@ -27,106 +27,57 @@ The ultimate goal of this project is to provide recommendations to the city of N
 
 ## Methodology
 
-*Installation*
-```{r}
+*Loading libraries*
+```{r error=FALSE, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(ggthemes)
 library(ggmap)
-library(mapview)
-library(sf)
 ```
 
 
+### Data preparation
+
 ```{r}
-# First of all, that's read the data and print the first few rows
+# First of all, that's read the data and take a glimpse what it contains
 df = read.csv("NYC Accidents 2020.csv")
-head(df)
+glimpse(df)
+```
+
+```{r}
+# Check for missing values
+sum(is.na(df))
 ```
 
 
 ```{r}
-rows = NROW(df)
-cols = NCOL(df)
+# Drop all the NAs
+df <- na.omit(df)
 
-print(paste("There are :", rows, "rows in total."))
-print(paste("There are :", cols, "columns in total."))
+# We also need to drop LATITUDE equal 0, otherwise it will cause problems when we plot
+df<- df[df$LATITUDE != 0,]
+
+#Check if all the NAs are droped
+sum(is.na(df))
 ```
+
+```{r}
+# Drop some unnecessary columns
+df = df %>% select(1:18)
+glimpse(df)
+```
+
+### Map plotting the people killed by motor vehicle in NYC
 
 
 ```{r}
-summary(df)
+qmplot(data = df, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
+      darken = 0, geom = "auto", color = NUMBER.OF.PERSONS.KILLED , 
+      alpha=I(.5), size = I(0.0000001), 
+      zoom = 10,extent = "panel",f = 0.005, 
+      xlab = "", ylab = "", main = "NYC Traffic Accidents Killed") +
+      theme(axis.ticks = element_blank(), axis.text = element_blank()) +
+      theme(legend.position="none")
 ```
-
-
-```{r}
-# Drop all the N/A
-df_without_na <- na.omit(df)
-df_without_na<- df_without_na[df_without_na$LATITUDE != 0,]
-head(df_without_na)
-```
-
-
-```{r}
-min_lat <- 40.5774
-max_lat <- 40.9176
-min_long <- -74.15
-max_long <- -73.7004
-
-ggplot(df_without_na, aes(x=LONGITUDE, y=LATITUDE)) +
-  geom_point(size=0.06, color="seagreen") +
-  scale_x_continuous(limits=c(min_long, max_long)) +
-  scale_y_continuous(limits=c(min_lat, max_lat)) +
-  ggtitle("Map of New York City", ) + theme(plot.title = element_text(hjust = 0.5))
-```
-
-
-```{r}
-qmplot(x = LONGITUDE, y = LATITUDE, data = df_without_na, maptype = "terrain",darken = 0,
-       geom = "point", color = NUMBER.OF.PERSONS.KILLED, size = I(0.0000001)) 
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Results
-
-
-### References
-
-
-
-
-
-
-
-
-
-
 
 
 
