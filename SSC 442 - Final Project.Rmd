@@ -32,6 +32,7 @@ The ultimate goal of this project is to provide recommendations to the city of N
 library(tidyverse)
 library(ggthemes)
 library(ggmap)
+library(lubridate)
 ```
 
 
@@ -61,6 +62,12 @@ sum(is.na(df))
 ```
 
 ```{r}
+# Use lubridate() to change the date format
+df$CRASH.DATE = mdy(df$CRASH.DATE)
+```
+
+
+```{r}
 # Drop some unnecessary columns
 df = df %>% select(1:18)
 glimpse(df)
@@ -78,6 +85,60 @@ qmplot(data = df, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
       theme(axis.ticks = element_blank(), axis.text = element_blank()) +
       theme(legend.position="none")
 ```
+
+
+### Descriptive statistics: Summarize the main characteristics of the data set, such as the mean, median, and standard deviation of the number of accidents and injuries.
+
+```{r}
+df %>% group_by(BOROUGH) %>% summarise(sum(NUMBER.OF.PERSONS.KILLED))
+```
+
+
+### Regression analysis: Model the relationship between the number of accidents and borough. 
+
+```{r}
+model <- lm(NUMBER.OF.PERSONS.INJURED ~ BOROUGH, data = df)
+
+# Summarize the model
+summary(model)
+```
+
+### Accidents Per Month
+
+```{r}
+month_accidents = df %>% group_by(month(CRASH.DATE)) %>%
+  summarise(sum(NUMBER.OF.PERSONS.INJURED , NUMBER.OF.PERSONS.KILLED)) %>%
+  rename("Month" = "month(CRASH.DATE)") %>%
+  rename("Total_accidents" = "sum(NUMBER.OF.PERSONS.INJURED, NUMBER.OF.PERSONS.KILLED)")
+
+ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accidents)) +
+  geom_bar(stat = "identity", position = "dodge", colour = "black") +
+  scale_x_discrete(limits = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug")) +
+  xlab("Month") + ylab("Total Accidents") +
+  ggtitle("Total Accidents by Month in NYC") +
+  theme_stata() +
+  theme(legend.position = "none", 
+        axis.text = element_text(size = 12),
+        plot.title = element_text(size = 18),
+        legend.text = element_text(size = 12)) 
+  
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
