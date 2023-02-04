@@ -32,6 +32,7 @@ The ultimate goal of this project is to provide recommendations to the city of N
 library(tidyverse)
 library(ggthemes)
 library(ggmap)
+library(ggrepel)
 library(lubridate)
 ```
 
@@ -117,14 +118,15 @@ month_accidents = df_withoutna %>% group_by(month(CRASH.DATE)) %>%
 ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accidents)) +
   geom_bar(stat = "identity", position = "dodge", colour = "black") +
   scale_x_discrete(limits = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug")) +
-  geom_label(aes(Month, Total_accidents, label = Total_accidents), colour = "Black", size = 2.5) +
+  geom_text(aes(label = Total_accidents), position = position_dodge(0.9), vjust = 2, size = 4, color = "#ffffff") +
   xlab("Month") + ylab("Total Accidents") +
   ggtitle("Total Accidents by Month in NYC") +
   theme_stata() +
   theme(legend.position = "none", 
         axis.text = element_text(size = 12),
-        plot.title = element_text(size = 18),
-        legend.text = element_text(size = 12)) 
+        plot.title = element_text(size = 18, face = "bold"),
+        legend.text = element_text(size = 12),
+        axis.ticks.x = element_blank()) 
   
 ```
 
@@ -138,17 +140,18 @@ day_accidents <- df_withoutna %>%
 
 
 ggplot(day_accidents, aes(x = dotw, y = total_accidents, color = total_accidents)) +
-  geom_bar(stat = "identity", position = "dodge", colour = "black") +
+  geom_bar(stat = "identity", colour = "black") +
   scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun")) +
   ggtitle("Total accicents per day of the week in NYC") +
   xlab("") +
   ylab("Counts") +
-  geom_label(aes(dotw, total_accidents, label = total_accidents), colour = "Black", size = 2.5) +
+  geom_text(aes(label = total_accidents), position = position_dodge(0.9), vjust = 2, size = 4, color = "#ffffff") +
   theme_stata() +
   theme(legend.position = "none", 
         axis.text = element_text(size = 12),
-        plot.title = element_text(size = 18),
-        legend.text = element_text(size = 12)) 
+        plot.title = element_text(size = 18, face = "bold"),
+        legend.text = element_text(size = 12),
+        axis.ticks.x = element_blank()) 
 ```
 
 
@@ -158,9 +161,46 @@ ggplot(day_accidents, aes(x = dotw, y = total_accidents, color = total_accidents
 df %>% group_by(BOROUGH) %>% 
   summarise(injuries = sum(NUMBER.OF.PERSONS.INJURED),
             deaths = sum(NUMBER.OF.PERSONS.KILLED),
-            total = sum(injuries, deaths))
+            total = sum(injuries, deaths)) %>%
+  filter(row_number() != 1) %>%
+  ggplot(aes(x = BOROUGH, y = total, fill = total)) +
+  geom_bar(stat = "identity", colour = "black") +
+  ggtitle("Total accicents by borough") +
+  xlab("") +
+  ylab("Total") +
+  geom_text(aes(label = total), position = position_dodge(0.9), vjust = 2, size = 4, color = "#ffffff") +
+  theme_stata() +
+  theme(legend.position = "none", 
+        axis.text = element_text(size = 12),
+        plot.title = element_text(size = 18, face = "bold"),
+        legend.text = element_text(size = 12),
+        axis.ticks.x = element_blank()) 
 ```
 
+### Work in progress.....
+
+```{r }
+df %>% group_by(CONTRIBUTING.FACTOR.VEHICLE.1) %>% 
+  summarise(injuries = sum(NUMBER.OF.PERSONS.INJURED),
+            deaths = sum(NUMBER.OF.PERSONS.KILLED),
+            total = sum(injuries, deaths)) %>%
+  filter(row_number() != 1) %>%
+  arrange(desc(total)) %>%
+  slice(1:15) %>%
+  ggplot(aes(x = reorder(CONTRIBUTING.FACTOR.VEHICLE.1, total, FUN = desc), y = total, fill = total)) +
+  geom_bar(stat = "identity",color = "black") +
+  ggtitle("Total Number of Accidents by Contributing Factor") +
+  xlab("Contributing Factor") +
+  ylab("Number of Accidents") +
+  # geom_text(aes(label = total), position = position_dodge(0.9), vjust = 2, size = 4, color = "#ffffff") +
+  geom_label_repel(aes(label = CONTRIBUTING.FACTOR.VEHICLE.1), color = "white", size = 2.5, max.overlaps = 15) +
+  theme_stata() +
+  theme(axis.text.x = element_blank(),
+        plot.title = element_text(size = 18, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.position = "none",
+        axis.ticks.x = element_blank())
+```
 
 
 
