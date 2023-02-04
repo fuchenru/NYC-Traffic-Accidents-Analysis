@@ -52,32 +52,36 @@ sum(is.na(df))
 
 ```{r}
 # Drop all the NAs
-df <- na.omit(df)
+df_withoutna <- na.omit(df)
 
 # We also need to drop LATITUDE equal 0, otherwise it will cause problems when we plot
-df<- df[df$LATITUDE != 0,]
+df_withoutna<- df_withoutna[df_withoutna$LATITUDE != 0,]
 
 #Check if all the NAs are droped
-sum(is.na(df))
+sum(is.na(df_withoutna))
 ```
 
 ```{r}
 # Use lubridate() to change the date format
-df$CRASH.DATE = mdy(df$CRASH.DATE)
+df_withoutna$CRASH.DATE = mdy(df_withoutna$CRASH.DATE)
 ```
 
 
 ```{r}
 # Drop some unnecessary columns
-df = df %>% select(1:18)
-glimpse(df)
+df_withoutna = df_withoutna %>% select(1:18)
+glimpse(df_withoutna)
 ```
 
 ### Map plotting the people killed by motor vehicle in NYC
 
+First and foremost, let's examine the number of fatalities resulting from motor vehicle accidents across New York City in 2020. To represent each death, we have used dots on a map and it's evident that the concentration of these dots varies among different boroughs. Upon initial inspection, it appears that Manhattan, the Bronx, and Brooklyn have the highest density of dots, indicating a higher rate of fatalities in these areas.
+
+Next, we will employ various analytical techniques to determine which borough is experiencing the most severe problem and to understand how public policy can be utilized to address this issue. By analyzing the data and identifying trends, we can work towards developing effective strategies that can help reduce the number of motor vehicle-related fatalities in New York City.
+
 
 ```{r}
-qmplot(data = df, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
+qmplot(data = df_withoutna, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
       darken = 0, geom = "auto", color = NUMBER.OF.PERSONS.KILLED , 
       alpha=I(.5), size = I(0.0000001), 
       zoom = 10,extent = "panel",f = 0.005, 
@@ -89,9 +93,8 @@ qmplot(data = df, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
 
 ### Descriptive statistics: Summarize the main characteristics of the data set, such as the mean, median, and standard deviation of the number of accidents and injuries.
 
-```{r}
-df %>% group_by(BOROUGH) %>% summarise(sum(NUMBER.OF.PERSONS.KILLED))
-```
+
+
 
 
 ### Regression analysis: Model the relationship between the number of accidents and borough. 
@@ -106,7 +109,7 @@ summary(model)
 ### Accidents Per Month
 
 ```{r}
-month_accidents = df %>% group_by(month(CRASH.DATE)) %>%
+month_accidents = df_withoutna %>% group_by(month(CRASH.DATE)) %>%
   summarise(sum(NUMBER.OF.PERSONS.INJURED , NUMBER.OF.PERSONS.KILLED)) %>%
   rename("Month" = "month(CRASH.DATE)") %>%
   rename("Total_accidents" = "sum(NUMBER.OF.PERSONS.INJURED, NUMBER.OF.PERSONS.KILLED)")
@@ -114,6 +117,7 @@ month_accidents = df %>% group_by(month(CRASH.DATE)) %>%
 ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accidents)) +
   geom_bar(stat = "identity", position = "dodge", colour = "black") +
   scale_x_discrete(limits = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug")) +
+  geom_label(aes(Month, Total_accidents, label = Total_accidents), colour = "Black", size = 2.5) +
   xlab("Month") + ylab("Total Accidents") +
   ggtitle("Total Accidents by Month in NYC") +
   theme_stata() +
@@ -124,11 +128,51 @@ ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accide
   
 ```
 
+### Accidents Per day
+
+```{r}
+day_accidents <- df_withoutna %>% 
+  mutate(dotw = wday(CRASH.DATE)) %>% 
+   group_by(dotw) %>%
+   summarise(total_accidents = sum(sum(NUMBER.OF.PERSONS.INJURED , NUMBER.OF.PERSONS.KILLED)))
+
+
+ggplot(day_accidents, aes(x = dotw, y = total_accidents, color = total_accidents)) +
+  geom_bar(stat = "identity", position = "dodge", colour = "black") +
+  scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun")) +
+  ggtitle("Total accicents per day of the week in NYC") +
+  xlab("") +
+  ylab("Counts") +
+  geom_label(aes(dotw, total_accidents, label = total_accidents), colour = "Black", size = 2.5) +
+  theme_stata() +
+  theme(legend.position = "none", 
+        axis.text = element_text(size = 12),
+        plot.title = element_text(size = 18),
+        legend.text = element_text(size = 12)) 
+```
+
+
+### Accidents, injured and killed per borough
+
+```{r}
+df %>% group_by(BOROUGH) %>% 
+  summarise(injuries = sum(NUMBER.OF.PERSONS.INJURED),
+            deaths = sum(NUMBER.OF.PERSONS.KILLED),
+            total = sum(injuries, deaths))
+```
 
 
 
 
 
+
+
+
+
+
+```{r}
+# df
+```
 
 
 
