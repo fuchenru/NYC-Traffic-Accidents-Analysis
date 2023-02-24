@@ -18,13 +18,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Background and Motivation
 
-The focus of this project is the examination of motor vehicle collisions that were reported by the New York City Police Department from January to August of 2020. Each record in the dataset, obtained from Kaggle, represents a unique collision and includes various details such as the date, time, and location of the accident, as well as additional data.
+The focus of this project is the examination of motor vehicle collisions that were reported by the New York City Police Department from January to August of 2020. Each record in the dataset, represents a unique collision and includes various details such as the date, time, and location of the accident, as well as additional data.
 
 The analysis will compare the percentage of total accidents by month, providing a snapshot of the trend over time. These statistics will be visually represented through the use of maps, which will demonstrate the frequency of accidents in different boroughs of New York City. Furthermore, the analysis will also determine the most common streets, days, and times when accidents are likely to occur.
 
 The ultimate goal of this project is to provide recommendations to the city of New York on how this analysis can be used to prevent future accidents. By highlighting the most common accident hotspots, times, and contributing factors, city planners and law enforcement officials will be equipped with the information necessary to implement effective safety measures and reduce the number of accidents in the city.
 
 
+
+\newpage
 ## Methodology
 
 *Loading libraries*
@@ -34,6 +36,9 @@ library(ggthemes)
 library(ggmap)
 library(ggrepel)
 library(lubridate)
+library(lmtest)
+library(sandwich)
+library(AER)
 ```
 
 
@@ -74,6 +79,8 @@ df_withoutna = df_withoutna %>% select(1:18)
 glimpse(df_withoutna)
 ```
 
+
+\newpage
 ### Map plotting the people killed by motor vehicle in NYC
 
 First and foremost, let's examine the number of fatalities resulting from motor vehicle accidents across New York City in 2020. To represent each death, we have used dots on a map and it's evident that the concentration of these dots varies among different boroughs. Upon initial inspection, it appears that Manhattan, the Bronx, and Brooklyn have the highest density of dots, indicating a higher rate of fatalities in these areas.
@@ -92,21 +99,60 @@ qmplot(data = df_withoutna, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
 ```
 
 
-### Descriptive statistics: Summarize the main characteristics of the data set, such as the mean, median, and standard deviation of the number of accidents and injuries.
 
 
 
-
-
+\newpage
 ### Regression analysis: Model the relationship between the number of accidents and borough. 
 
 ```{r}
-model <- lm(NUMBER.OF.PERSONS.INJURED ~ BOROUGH, data = df)
-
 # Summarize the model
-summary(model)
+myReg = lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
+coeftest(myReg, vcov = vcovHC(myReg, "HC1"))
 ```
 
+We use the linear regression model that is used to predict the number of persons injured in a traffic accident based on the borough in which the accident occurred. The borough is treated as a categorical variable with five levels (Bronx, Brooklyn, Manhattan, Queens, and Staten Island).
+
+In this model, Bronx is the base level, also known as omitted level.
+
+The coefficients of the model are shown in the table produced by the coeftest() function with heteroscedasticity-consistent standard errors computed using the vcovHC() function.
+
+The first coefficient is the intercept, which represents the expected number of persons injured when the accident occurs in the Bronx. The estimate of the intercept is 0.3412076, which means that on average, the number of persons injured in a traffic accident in the Bronx is 0.3412076.
+
+The next four coefficients are the differences between the expected number of persons injured in each of the other boroughs and the expected number in the Bronx. For example, the coefficient for Brooklyn (0.0142173) means that, on average, the number of persons injured in a traffic accident in Brooklyn is 0.0142173 higher than the number in the Bronx, holding all other variables constant (ceteris paribus).
+
+The t-values and p-values associated with each coefficient indicate whether each coefficient is statistically significant. The null hypothesis for each t-test is that the coefficient is equal to zero, and the alternative hypothesis is that the coefficient is different from zero. A p-value less than 0.05 suggests that the coefficient is statistically significant at the 5% level. In this model, the intercept and the coefficients for Manhattan and Staten Island are statistically significant, with p-values less than 0.05. The coefficients for Brooklyn and Queens are not statistically significant, with p-values greater than 0.05. This suggests that there is not enough evidence to conclude that the number of persons injured in a traffic accident differs between the Bronx and Queens or Brooklyn, after adjusting for other variables. However, there is evidence to suggest that the number of persons injured in a traffic accident is lower in Manhattan and higher in Staten Island compared to the Bronx, after adjusting for other variables.
+
+
+
+\newpage
+### Do we need heteroskedasticity-consistent errors?
+
+We might want to use Breusch-Pagan test to see if we need heteroskedasticity for this model.
+
+```{r}
+df_withoutna$uhat = residuals(myReg)
+df_withoutna$uhat2 = (df_withoutna$uhat)^2
+```
+
+```{r}
+# Estimate a linear regression model with uhat2 as the dependent variable
+bpReg <- lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
+summary(bpReg)
+```
+
+
+We get F-statistic: 17.16 on 4 and 47681 DF,  p-value: 4.481e-14
+
+In this case, the Breusch-Pagan test statistic is F=17.16, with 4 and 47681 degrees of freedom, and a very small p-value of 4.481e-14. This indicates strong evidence against the null hypothesis of homoscedasticity (i.e., constant variance of the errors) and suggests that there is heteroscedasticity in the model.
+
+In other words, the variance of the errors in the regression model is not constant across all levels of the independent variable (borough), which means that the residuals are not equally distributed. Therefore, the standard errors of the coefficients may not be accurate, and the results of the t-tests may not be reliable. To correct for heteroscedasticity, we could consider using a robust standard error estimator, such as the HC1 estimator, which we used in our regression model. This estimator can provide more accurate standard errors and t-statistics even in the presence of heteroscedasticity.
+
+
+
+
+
+\newpage
 ### Accidents Per Month
 
 ```{r}
@@ -130,6 +176,22 @@ ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accide
   
 ```
 
+After we obtained the visualization of total accidents by month in NYC in 2020. We found that April had the lowest number of accidents per month, there could be several reasons for this:
+
+- COVID-19 lockdown: One of the most significant factors that could have contributed to a decrease in the number of accidents is the COVID-19 lockdown in New York City, which began in March 2020. The lockdown resulted in many people staying at home, which would have led to a decrease in the number of cars on the road and a lower probability of accidents.
+
+- Weather: Another possible factor that could have contributed to a decrease in the number of accidents in April is the weather. April is typically a month with moderate temperatures in New York City, and the weather conditions may have been less conducive to accidents.
+
+- Other factors: There could be several other factors that contributed to the decrease in the number of accidents in April. For example, there could have been changes in traffic patterns, road closures, or road maintenance activities that reduced the number of accidents.
+
+
+
+
+
+
+
+
+\newpage
 ### Accidents Per day
 
 ```{r}
@@ -154,8 +216,43 @@ ggplot(day_accidents, aes(x = dotw, y = total_accidents, color = total_accidents
         axis.ticks.x = element_blank()) 
 ```
 
+We found that Friday and Saturday had higher numbers of accidents per day, but overall not significant enough, there could be several reasons for this:
 
-### Accidents, injured and killed per borough
+- Weekend traffic: One of the most significant factors that could have contributed to a higher number of accidents on Fridays and Saturdays is weekend traffic. On weekends, more people may be out and about, and more vehicles may be on the road, leading to a higher probability of accidents.
+
+- Alcohol consumption: Another factor that could have contributed to a higher number of accidents on Fridays and Saturdays is alcohol consumption. On weekends, people may be more likely to consume alcohol, which can impair their driving ability and increase the risk of accidents.
+
+- Time of day: It is also possible that the time of day could have contributed to the higher number of accidents on Fridays and Saturdays. People may be more likely to travel at night or later in the day on weekends, which can increase the risk of accidents due to reduced visibility or fatigue.
+
+
+
+
+
+
+
+
+
+
+\newpage
+### Total injured and killed per borough
+
+```{r}
+total_borough = df %>% 
+  group_by(BOROUGH) %>% 
+  summarise(accidents = n(),
+            injuries = sum(NUMBER.OF.PERSONS.INJURED),
+            deaths = sum(NUMBER.OF.PERSONS.KILLED))
+```
+
+
+```{r, echo = FALSE, warning=FALSE}
+knitr::kable(total_borough) 
+```
+
+
+
+
+
 
 ```{r}
 df %>% group_by(BOROUGH) %>% 
@@ -177,7 +274,30 @@ df %>% group_by(BOROUGH) %>%
         axis.ticks.x = element_blank()) 
 ```
 
-### Work in progress.....
+We found that Brooklyn had the highest number of accidents, followed by Queens, and we are surprised that Manhattan did not have the highest number, there could be several reasons for this:
+
+- Differences in traffic patterns: Brooklyn and Queens are both large boroughs with a lot of traffic and major highways running through them, which could explain the higher number of accidents. Manhattan, on the other hand, is a smaller borough with fewer highways, which could result in fewer accidents.
+
+- Differences in population density: Another factor that could contribute to differences in the number of accidents is population density. Brooklyn and Queens have a higher population density than Manhattan, which means there are more people and vehicles on the road, increasing the likelihood of accidents.
+
+- Differences in road infrastructure: Road infrastructure can also play a role in the number of accidents. Some areas may have poorly designed roads, confusing intersections, or inadequate signage, which can increase the risk of accidents.
+
+- External factors: It is also possible that external factors such as weather, road conditions, or driver behavior could have influenced the number of accidents in each borough.
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+### Total Number of Accidents by Contributing Factor
 
 ```{r }
 df %>% group_by(CONTRIBUTING.FACTOR.VEHICLE.1) %>% 
@@ -202,6 +322,17 @@ df %>% group_by(CONTRIBUTING.FACTOR.VEHICLE.1) %>%
         axis.ticks.x = element_blank())
 ```
 
+We found out that distraction is the higest followed by failed to yield and others, this suggests that policies and interventions aimed at reducing distracted driving and improving yielding behavior could help reduce the number of accidents.
+
+- Public awareness campaigns: The city could launch a public awareness campaign to educate drivers about the risks of distracted driving and the importance of focusing on the road. The campaign could use different channels such as social media, radio, TV, and billboards to reach as many drivers as possible.
+
+- Enforcement of traffic laws: The police department could increase the enforcement of traffic laws related to distracted driving and failing to yield. This could include targeted patrols in areas with high accident rates or increased use of traffic cameras to capture and penalize drivers who violate these laws.
+
+- Infrastructure improvements: The city could invest in infrastructure improvements such as better road markings, traffic signals, and signage to help drivers navigate safely and avoid accidents.
+
+- Driver education: The city could consider incorporating education about distracted driving and yielding behaviors into driver education programs, to ensure that new drivers are aware of the risks and are better prepared to drive safely.
+
+By implementing policies and interventions that address the leading contributing factors to motor vehicle collisions, the city can work towards reducing the number of accidents, injuries, and fatalities on the roads.
 
 
 
@@ -210,9 +341,11 @@ df %>% group_by(CONTRIBUTING.FACTOR.VEHICLE.1) %>%
 
 
 
-```{r}
-# df
-```
+
+
+
+
+
 
 
 
