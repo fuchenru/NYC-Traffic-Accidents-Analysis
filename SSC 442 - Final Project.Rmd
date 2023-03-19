@@ -5,11 +5,6 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-PowerPoint reference: https://www.linkedin.com/in/hoyuli/overlay/1593491717863/single-media-viewer/?profileId=ACoAABGobQoBad3aoz8Aka2DErr_wx3A9UJhl50
-
-Analysis reference: https://www.kaggle.com/datasets/mysarahmadbhat/nyc-traffic-accidents/code
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -58,10 +53,10 @@ sum(is.na(df))
 
 ```{r}
 # Drop all the NAs
-df_withoutna <- na.omit(df)
+df_withoutna = na.omit(df)
 
 # We also need to drop LATITUDE equal 0, otherwise it will cause problems when we plot
-df_withoutna<- df_withoutna[df_withoutna$LATITUDE != 0,]
+df_withoutna =  df_withoutna[df_withoutna$LATITUDE != 0,]
 
 #Check if all the NAs are droped
 sum(is.na(df_withoutna))
@@ -137,7 +132,7 @@ df_withoutna$uhat2 = (df_withoutna$uhat)^2
 
 ```{r}
 # Estimate a linear regression model with uhat2 as the dependent variable
-bpReg <- lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
+bpReg = lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
 summary(bpReg)
 ```
 
@@ -195,7 +190,7 @@ After we obtained the visualization of total accidents by month in NYC in 2020. 
 ### Accidents Per day
 
 ```{r}
-day_accidents <- df_withoutna %>% 
+day_accidents = df_withoutna %>% 
   mutate(dotw = wday(CRASH.DATE)) %>% 
    group_by(dotw) %>%
    summarise(total_accidents = sum(sum(NUMBER.OF.PERSONS.INJURED , NUMBER.OF.PERSONS.KILLED)))
