@@ -1,15 +1,29 @@
-# SSC442-Final-Project
+# NYC Traffic Accidents Analysis
 
-Group member: Peter Fu Chen, Mike Liu
+This project analyzes traffic accidents data in New York City in 2020. The goal is to understand patterns and trends in traffic accidents and identify factors that contribute to accidents.
 
-This project is focused on analyzing the data on motor vehicle collisions that were reported by the New York City Police Department from January to August of 2020. The dataset contains a comprehensive record of each collision, including details such as the date, time, and location of the accident, as well as additional data.
+The project includes data cleaning and preparation, exploratory data analysis, regression analysis, and visualizations. The main tools used in the project are R and ggplot2 package.
 
-The primary objective of this analysis is to compare the percentage of total accidents by month, in order to identify trends and changes over time. This will be achieved by utilizing various statistical tools and methods, such as data visualization through maps, to demonstrate the frequency of accidents in different boroughs of New York City.
+## Data
 
-Additionally, the analysis will also provide insights into the most common streets, days, and times when accidents are likely to occur. This information will be useful for law enforcement officials, traffic engineers, and city planners to understand the contributing factors to the accidents and implement effective safety measures to prevent future accidents.
+The data used in this project is obtained from NYC Open Data portal. The dataset includes information about traffic accidents that occurred in New York City from January 2020 to December 2020.
 
-The end goal of this project is to provide recommendations to the City of New York based on the findings of the analysis. These recommendations will be based on the most common accident hotspots, times, and contributing factors, and will help the city implement effective measures to reduce the number of accidents in the future.
+## Analysis
 
-To achieve this goal, the project will use advanced statistical analysis techniques to identify trends and patterns in the data. These techniques will include machine learning algorithms, such as clustering and regression, to identify the most significant factors that contribute to the accidents.
+The project is divided into several parts:
 
-The project's outcome will have significant implications for the city's transportation and public safety policies, as it will provide insights into the causes of accidents and how they can be prevented. The findings of this analysis will be presented in a detailed report, which will be made publicly available on the project's Github repository.
+- Data Cleaning and Preparation: The data is cleaned and prepared for analysis. This includes removing missing values, converting data types, and creating new variables.
+- Exploratory Data Analysis: Basic statistics and visualizations are used to understand patterns and trends in the data. This includes mapping accidents across the city, analyzing accidents by borough and time of day, and examining the number of accidents per month.
+- Regression Analysis: A regression model is used to predict the number of persons injured in a traffic accident based on the borough in which the accident occurred. The results of the regression analysis are interpreted and discussed.
+- Visualizations: A number of visualizations are created to summarize and present the results of the analysis. These include maps, bar charts, and line plots.
+
+## Requirements
+
+- R
+- ggplot2 package
+- dplyr package
+- tidyr package
+
+## Conclusion
+
+This project provides insights into traffic accidents in New York City in 2020. The analysis reveals patterns and trends in the data and identifies factors that contribute to accidents. The project highlights the importance of data analysis and visualization in understanding complex phenomena such as traffic accidents, and demonstrates the power of R and ggplot2 in carrying out such analyses.
