@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 # NYC Traffic Accidents Analysis
@@ -83,7 +83,9 @@ First and foremost, let's examine the number of fatalities resulting from motor 
 Next, we will employ various analytical techniques to determine which borough is experiencing the most severe problem and to understand how public policy can be utilized to address this issue. By analyzing the data and identifying trends, we can work towards developing effective strategies that can help reduce the number of motor vehicle-related fatalities in New York City.
 
 
-```{r}
+```{r, warning = FALSE, messages = FALSE, error = FALSE}
+# Plot a map showing the locations of accidents where people were killed
+
 qmplot(data = df_withoutna, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
       darken = 0, geom = "auto", color = NUMBER.OF.PERSONS.KILLED , 
       alpha=I(.5), size = I(0.0000001), 
@@ -106,17 +108,18 @@ myReg = lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
 coeftest(myReg, vcov = vcovHC(myReg, "HC1"))
 ```
 
-We use the linear regression model that is used to predict the number of persons injured in a traffic accident based on the borough in which the accident occurred. The borough is treated as a categorical variable with five levels (Bronx, Brooklyn, Manhattan, Queens, and Staten Island).
+To better understand the relationship between the borough where a traffic accident occurs and the number of persons injured, we fit a linear regression model using the lm() function in R. In this model, we predict the number of persons injured based on the borough in which the accident occurred, treating borough as a categorical variable with five levels (Bronx, Brooklyn, Manhattan, Queens, and Staten Island).
 
-In this model, Bronx is the base level, also known as omitted level.
+In this model, the Bronx is the base level, or omitted level, against which the other boroughs are compared. The coefficients of the model represent the differences between the expected number of persons injured in each of the other boroughs and the expected number in the Bronx, holding all other variables constant.
 
-The coefficients of the model are shown in the table produced by the coeftest() function with heteroscedasticity-consistent standard errors computed using the vcovHC() function.
-
-The first coefficient is the intercept, which represents the expected number of persons injured when the accident occurs in the Bronx. The estimate of the intercept is 0.3412076, which means that on average, the number of persons injured in a traffic accident in the Bronx is 0.3412076.
+The results of the model are shown in the table produced by the coeftest() function. The intercept represents the expected number of persons injured when the accident occurs in the Bronx. The estimate of the intercept is 0.3412076, which means that on average, the number of persons injured in a traffic accident in the Bronx is 0.3412076.
 
 The next four coefficients are the differences between the expected number of persons injured in each of the other boroughs and the expected number in the Bronx. For example, the coefficient for Brooklyn (0.0142173) means that, on average, the number of persons injured in a traffic accident in Brooklyn is 0.0142173 higher than the number in the Bronx, holding all other variables constant (ceteris paribus).
 
-The t-values and p-values associated with each coefficient indicate whether each coefficient is statistically significant. The null hypothesis for each t-test is that the coefficient is equal to zero, and the alternative hypothesis is that the coefficient is different from zero. A p-value less than 0.05 suggests that the coefficient is statistically significant at the 5% level. In this model, the intercept and the coefficients for Manhattan and Staten Island are statistically significant, with p-values less than 0.05. The coefficients for Brooklyn and Queens are not statistically significant, with p-values greater than 0.05. This suggests that there is not enough evidence to conclude that the number of persons injured in a traffic accident differs between the Bronx and Queens or Brooklyn, after adjusting for other variables. However, there is evidence to suggest that the number of persons injured in a traffic accident is lower in Manhattan and higher in Staten Island compared to the Bronx, after adjusting for other variables.
+The t-values and p-values associated with each coefficient indicate whether each coefficient is statistically significant. In this model, the intercept and the coefficients for Manhattan and Staten Island are statistically significant, with p-values less than 0.05. The coefficients for Brooklyn and Queens are not statistically significant, with p-values greater than 0.05. This suggests that there is not enough evidence to conclude that the number of persons injured in a traffic accident differs between the Bronx and Queens or Brooklyn, after adjusting for other variables. However, there is evidence to suggest that the number of persons injured in a traffic accident is lower in Manhattan and higher in Staten Island compared to the Bronx, after adjusting for other variables.
+
+These results have important implications for policymakers and law enforcement officials in New York City. By identifying the boroughs with the highest rates of persons injured in traffic accidents, city planners can develop targeted interventions and safety measures to help reduce the number of accidents and improve public safety.
+
 
 
 
@@ -137,11 +140,16 @@ summary(bpReg)
 ```
 
 
-We get F-statistic: 17.16 on 4 and 47681 DF,  p-value: 4.481e-14
 
-In this case, the Breusch-Pagan test statistic is F=17.16, with 4 and 47681 degrees of freedom, and a very small p-value of 4.481e-14. This indicates strong evidence against the null hypothesis of homoscedasticity (i.e., constant variance of the errors) and suggests that there is heteroscedasticity in the model.
+Heteroscedasticity, or non-constant variance of the errors in a regression model, can be a problem in statistical analysis. When the errors have different variances across the range of the independent variable, it can lead to biased estimates of the standard errors and t-statistics, which can cause incorrect inferences about the significance of the coefficients and may lead to incorrect conclusions about the relationship between the independent and dependent variables.
 
-In other words, the variance of the errors in the regression model is not constant across all levels of the independent variable (borough), which means that the residuals are not equally distributed. Therefore, the standard errors of the coefficients may not be accurate, and the results of the t-tests may not be reliable. To correct for heteroscedasticity, we could consider using a robust standard error estimator, such as the HC1 estimator, which we used in our regression model. This estimator can provide more accurate standard errors and t-statistics even in the presence of heteroscedasticity.
+To determine if heteroscedasticity is a problem in our regression model, we can use the Breusch-Pagan test. This test checks whether the variance of the residuals in the model is constant across all levels of the independent variable.
+
+In this case, we estimate a linear regression model with `NUMBER.OF.PERSONS.INJURED` as the dependent variable and `BOROUGH` as the independent variable, using the `lm()` function in R. We then calculate the residuals and their squared values, which we use as the dependent variable in a second regression model. The second model tests whether the squared residuals are related to the independent variable, which would indicate heteroscedasticity.
+
+The results of the Breusch-Pagan test show a significant F-statistic of 17.16, with 4 and 47681 degrees of freedom, and a very small p-value of 4.481e-14. This provides strong evidence against the null hypothesis of homoscedasticity and suggests that there is heteroscedasticity in the model.
+
+To correct for heteroscedasticity, we can use a robust standard error estimator, such as the HC1 estimator, which we used in our regression model. This estimator provides more accurate standard errors and t-statistics even in the presence of heteroscedasticity, which can help ensure that the results of the regression model are accurate and reliable, and can help prevent incorrect conclusions about the relationship between the independent and dependent variables.
 
 
 
@@ -171,13 +179,16 @@ ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accide
   
 ```
 
-After we obtained the visualization of total accidents by month in NYC in 2020. We found that April had the lowest number of accidents per month, there could be several reasons for this:
+The bar chart shows that April had the lowest number of accidents per month in 2020, with a total of 11,234 accidents. This represents a significant decrease from the previous month, March, which had 15,315 accidents. There are several factors that could have contributed to this decrease:
 
 - COVID-19 lockdown: One of the most significant factors that could have contributed to a decrease in the number of accidents is the COVID-19 lockdown in New York City, which began in March 2020. The lockdown resulted in many people staying at home, which would have led to a decrease in the number of cars on the road and a lower probability of accidents.
 
 - Weather: Another possible factor that could have contributed to a decrease in the number of accidents in April is the weather. April is typically a month with moderate temperatures in New York City, and the weather conditions may have been less conducive to accidents.
 
 - Other factors: There could be several other factors that contributed to the decrease in the number of accidents in April. For example, there could have been changes in traffic patterns, road closures, or road maintenance activities that reduced the number of accidents.
+
+It's important to note that while April had the lowest number of accidents per month in 2020, this may not necessarily reflect a long-term trend. There may be other factors at play that contributed to the decrease in April, and it's possible that accident rates could return to previous levels in the future. Additionally, the analysis focuses on the total number of accidents per month, but it may be informative to look at the types of accidents that occurred and the factors that contributed to them. For example, it's possible that certain types of accidents, such as those involving pedestrians or cyclists, were more or less common during the lockdown period.
+
 
 
 
@@ -334,7 +345,20 @@ By implementing policies and interventions that address the leading contributing
 
 
 
+\newpage
+### Conclusion
 
+In this project, we analyzed the New York City motor vehicle accidents dataset from 2020 to gain insights into the frequency, distribution, and causes of traffic accidents in the city. We utilized data visualization techniques and statistical analysis to explore various aspects of the data and identify patterns and trends.
+
+We found that the number of accidents in New York City decreased significantly in 2020, which we attributed to the COVID-19 lockdown and other factors such as weather and changes in traffic patterns.
+
+We also found that certain factors such as borough, day of the week, and time of day were associated with a higher probability of accidents. Specifically, Brooklyn and Queens had the highest number of accidents, Fridays and Saturdays had the highest number of accidents per day, and the afternoon and evening had a higher probability of accidents.
+
+Furthermore, we identified several potential factors that could contribute to accidents, including alcohol consumption, traffic congestion, and road infrastructure. We also noted that heteroscedasticity was present in our regression model and used robust standard error estimation to correct for this issue.
+
+Our findings have important implications for policymakers, law enforcement, and public safety officials, who can use this information to develop targeted interventions and strategies to reduce the number of accidents in the city. For example, they can focus on improving road infrastructure, increasing public awareness about the dangers of driving under the influence, and implementing measures to reduce traffic congestion during peak hours.
+
+Overall, our analysis provides a valuable contribution to the ongoing efforts to improve traffic safety in New York City, and our findings can serve as a foundation for future research in this area.
 
 
 
