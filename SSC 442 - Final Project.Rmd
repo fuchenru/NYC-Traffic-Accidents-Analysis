@@ -1,15 +1,15 @@
 ---
-title: "SSC 442 - Final Project"
-author: "Peter Fu Chen , Mike Liu"
+title: "SSC 442 - Final Project (No R Code)"
+author: "Peter Fu Chen"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# NYC Traffic Accidents Analysis
+# NYC Traffic Accidents Analysis (policy conclusion project)
 
 ## Background and Motivation
 
@@ -20,12 +20,11 @@ The analysis will compare the percentage of total accidents by month, providing 
 The ultimate goal of this project is to provide recommendations to the city of New York on how this analysis can be used to prevent future accidents. By highlighting the most common accident hotspots, times, and contributing factors, city planners and law enforcement officials will be equipped with the information necessary to implement effective safety measures and reduce the number of accidents in the city.
 
 
-
-\newpage
 ## Methodology
 
 *Loading libraries*
-```{r error=FALSE, warning=FALSE, message=FALSE}
+
+```{r,error=FALSE, warning=FALSE, message=FALSE}
 library(tidyverse)
 library(ggthemes)
 library(ggmap)
@@ -41,8 +40,7 @@ library(AER)
 
 ```{r}
 # First of all, that's read the data and take a glimpse what it contains
-df = read.csv("NYC Accidents 2020.csv")
-glimpse(df)
+df = read.csv("data.csv")
 ```
 
 ```{r}
@@ -71,16 +69,13 @@ df_withoutna$CRASH.DATE = mdy(df_withoutna$CRASH.DATE)
 ```{r}
 # Drop some unnecessary columns
 df_withoutna = df_withoutna %>% select(1:18)
-glimpse(df_withoutna)
 ```
 
 
 \newpage
 ### Map plotting the people killed by motor vehicle in NYC
 
-First and foremost, let's examine the number of fatalities resulting from motor vehicle accidents across New York City in 2020. To represent each death, we have used dots on a map and it's evident that the concentration of these dots varies among different boroughs. Upon initial inspection, it appears that Manhattan, the Bronx, and Brooklyn have the highest density of dots, indicating a higher rate of fatalities in these areas.
-
-Next, we will employ various analytical techniques to determine which borough is experiencing the most severe problem and to understand how public policy can be utilized to address this issue. By analyzing the data and identifying trends, we can work towards developing effective strategies that can help reduce the number of motor vehicle-related fatalities in New York City.
+The number of fatalities resulting from motor vehicle accidents across New York City in 2020 was visualized using a map. Each dot on the map represents a death, and it's evident that the concentration of these dots varies among different boroughs. Manhattan, the Bronx, and Brooklyn appear to have the highest density of dots, indicating a higher rate of fatalities in these areas. This information can help policymakers target their interventions to specific locations to reduce the number of motor vehicle-related fatalities in New York City.
 
 
 ```{r, warning = FALSE, messages = FALSE, error = FALSE}
@@ -97,77 +92,20 @@ qmplot(data = df_withoutna, x = LONGITUDE, y = LATITUDE, maptype = "terrain",
 
 
 
-
-
-\newpage
-### Regression analysis: Model the relationship between the number of accidents and borough. 
-
-```{r}
-# Summarize the model
-myReg = lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
-coeftest(myReg, vcov = vcovHC(myReg, "HC1"))
-```
-
-To better understand the relationship between the borough where a traffic accident occurs and the number of persons injured, we fit a linear regression model using the lm() function in R. In this model, we predict the number of persons injured based on the borough in which the accident occurred, treating borough as a categorical variable with five levels (Bronx, Brooklyn, Manhattan, Queens, and Staten Island).
-
-In this model, the Bronx is the base level, or omitted level, against which the other boroughs are compared. The coefficients of the model represent the differences between the expected number of persons injured in each of the other boroughs and the expected number in the Bronx, holding all other variables constant.
-
-The results of the model are shown in the table produced by the coeftest() function. The intercept represents the expected number of persons injured when the accident occurs in the Bronx. The estimate of the intercept is 0.3412076, which means that on average, the number of persons injured in a traffic accident in the Bronx is 0.3412076.
-
-The next four coefficients are the differences between the expected number of persons injured in each of the other boroughs and the expected number in the Bronx. For example, the coefficient for Brooklyn (0.0142173) means that, on average, the number of persons injured in a traffic accident in Brooklyn is 0.0142173 higher than the number in the Bronx, holding all other variables constant (ceteris paribus).
-
-The t-values and p-values associated with each coefficient indicate whether each coefficient is statistically significant. In this model, the intercept and the coefficients for Manhattan and Staten Island are statistically significant, with p-values less than 0.05. The coefficients for Brooklyn and Queens are not statistically significant, with p-values greater than 0.05. This suggests that there is not enough evidence to conclude that the number of persons injured in a traffic accident differs between the Bronx and Queens or Brooklyn, after adjusting for other variables. However, there is evidence to suggest that the number of persons injured in a traffic accident is lower in Manhattan and higher in Staten Island compared to the Bronx, after adjusting for other variables.
-
-These results have important implications for policymakers and law enforcement officials in New York City. By identifying the boroughs with the highest rates of persons injured in traffic accidents, city planners can develop targeted interventions and safety measures to help reduce the number of accidents and improve public safety.
-
-
-
-
-\newpage
-### Do we need heteroskedasticity-consistent errors?
-
-We might want to use Breusch-Pagan test to see if we need heteroskedasticity for this model.
-
-```{r}
-df_withoutna$uhat = residuals(myReg)
-df_withoutna$uhat2 = (df_withoutna$uhat)^2
-```
-
-```{r}
-# Estimate a linear regression model with uhat2 as the dependent variable
-bpReg = lm(NUMBER.OF.PERSONS.INJURED ~ as.factor(BOROUGH), data = df_withoutna)
-summary(bpReg)
-```
-
-
-
-Heteroscedasticity, or non-constant variance of the errors in a regression model, can be a problem in statistical analysis. When the errors have different variances across the range of the independent variable, it can lead to biased estimates of the standard errors and t-statistics, which can cause incorrect inferences about the significance of the coefficients and may lead to incorrect conclusions about the relationship between the independent and dependent variables.
-
-To determine if heteroscedasticity is a problem in our regression model, we can use the Breusch-Pagan test. This test checks whether the variance of the residuals in the model is constant across all levels of the independent variable.
-
-In this case, we estimate a linear regression model with `NUMBER.OF.PERSONS.INJURED` as the dependent variable and `BOROUGH` as the independent variable, using the `lm()` function in R. We then calculate the residuals and their squared values, which we use as the dependent variable in a second regression model. The second model tests whether the squared residuals are related to the independent variable, which would indicate heteroscedasticity.
-
-The results of the Breusch-Pagan test show a significant F-statistic of 17.16, with 4 and 47681 degrees of freedom, and a very small p-value of 4.481e-14. This provides strong evidence against the null hypothesis of homoscedasticity and suggests that there is heteroscedasticity in the model.
-
-To correct for heteroscedasticity, we can use a robust standard error estimator, such as the HC1 estimator, which we used in our regression model. This estimator provides more accurate standard errors and t-statistics even in the presence of heteroscedasticity, which can help ensure that the results of the regression model are accurate and reliable, and can help prevent incorrect conclusions about the relationship between the independent and dependent variables.
-
-
-
-
-
 \newpage
 ### Accidents Per Month
 
-```{r}
+```{r, warning = FALSE, messages = FALSE, error = FALSE}
 month_accidents = df_withoutna %>% group_by(month(CRASH.DATE)) %>%
   summarise(sum(NUMBER.OF.PERSONS.INJURED , NUMBER.OF.PERSONS.KILLED)) %>%
   rename("Month" = "month(CRASH.DATE)") %>%
   rename("Total_accidents" = "sum(NUMBER.OF.PERSONS.INJURED, NUMBER.OF.PERSONS.KILLED)")
 
-ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accidents)) +
-  geom_bar(stat = "identity", position = "dodge", colour = "black") +
+ggplot(month_accidents, aes(x = Month, y = Total_accidents)) +
+  geom_line(size = 1.5, color = "#2c3e50") +
+  geom_point(size = 3, color = "#2c3e50") +
+  geom_smooth(method = "lm", se = FALSE, color = "#3498db", fullrange = TRUE) +
   scale_x_discrete(limits = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug")) +
-  geom_text(aes(label = Total_accidents), position = position_dodge(0.9), vjust = 2, size = 4, color = "#ffffff") +
   xlab("Month") + ylab("Total Accidents") +
   ggtitle("Total Accidents by Month in NYC") +
   theme_stata() +
@@ -179,15 +117,7 @@ ggplot(month_accidents, aes(x = Month, y = Total_accidents, color = Total_accide
   
 ```
 
-The bar chart shows that April had the lowest number of accidents per month in 2020, with a total of 11,234 accidents. This represents a significant decrease from the previous month, March, which had 15,315 accidents. There are several factors that could have contributed to this decrease:
-
-- COVID-19 lockdown: One of the most significant factors that could have contributed to a decrease in the number of accidents is the COVID-19 lockdown in New York City, which began in March 2020. The lockdown resulted in many people staying at home, which would have led to a decrease in the number of cars on the road and a lower probability of accidents.
-
-- Weather: Another possible factor that could have contributed to a decrease in the number of accidents in April is the weather. April is typically a month with moderate temperatures in New York City, and the weather conditions may have been less conducive to accidents.
-
-- Other factors: There could be several other factors that contributed to the decrease in the number of accidents in April. For example, there could have been changes in traffic patterns, road closures, or road maintenance activities that reduced the number of accidents.
-
-It's important to note that while April had the lowest number of accidents per month in 2020, this may not necessarily reflect a long-term trend. There may be other factors at play that contributed to the decrease in April, and it's possible that accident rates could return to previous levels in the future. Additionally, the analysis focuses on the total number of accidents per month, but it may be informative to look at the types of accidents that occurred and the factors that contributed to them. For example, it's possible that certain types of accidents, such as those involving pedestrians or cyclists, were more or less common during the lockdown period.
+The line chart illustrates the total number of accidents per month in NYC from January to August 2020. April had the lowest number of accidents, with a total of 11,234, which was significantly lower than the previous month, March, which had 15,315 accidents. Several factors may have contributed to this decrease, such as the COVID-19 lockdown and weather conditions. It's important to note that this decrease may not reflect a long-term trend, and analyzing the types and factors of accidents may provide further insight.
 
 
 
@@ -195,9 +125,6 @@ It's important to note that while April had the lowest number of accidents per m
 
 
 
-
-
-\newpage
 ### Accidents Per day
 
 ```{r}
@@ -208,27 +135,22 @@ day_accidents = df_withoutna %>%
 
 
 ggplot(day_accidents, aes(x = dotw, y = total_accidents, color = total_accidents)) +
-  geom_bar(stat = "identity", colour = "black") +
+  geom_line(size = 1, color = "#4e79a7") +
   scale_x_discrete(limits = c("Mon", "Tue", "Wed", "Thur", "Fri", "Sat", "Sun")) +
-  ggtitle("Total accicents per day of the week in NYC") +
+  ggtitle("Total accidents per day of the week in NYC") +
   xlab("") +
   ylab("Counts") +
-  geom_text(aes(label = total_accidents), position = position_dodge(0.9), vjust = 2, size = 4, color = "#ffffff") +
+  geom_text(aes(label = total_accidents), nudge_y = 10, size = 4, color = "black") +
   theme_stata() +
   theme(legend.position = "none", 
         axis.text = element_text(size = 12),
         plot.title = element_text(size = 18, face = "bold"),
         legend.text = element_text(size = 12),
-        axis.ticks.x = element_blank()) 
+        axis.ticks.x = element_blank())
+
 ```
 
-We found that Friday and Saturday had higher numbers of accidents per day, but overall not significant enough, there could be several reasons for this:
-
-- Weekend traffic: One of the most significant factors that could have contributed to a higher number of accidents on Fridays and Saturdays is weekend traffic. On weekends, more people may be out and about, and more vehicles may be on the road, leading to a higher probability of accidents.
-
-- Alcohol consumption: Another factor that could have contributed to a higher number of accidents on Fridays and Saturdays is alcohol consumption. On weekends, people may be more likely to consume alcohol, which can impair their driving ability and increase the risk of accidents.
-
-- Time of day: It is also possible that the time of day could have contributed to the higher number of accidents on Fridays and Saturdays. People may be more likely to travel at night or later in the day on weekends, which can increase the risk of accidents due to reduced visibility or fatigue.
+This plot above shows the total number of accidents per day of the week in NYC. We observed that Friday and Saturday had a slightly higher number of accidents, but this difference was not significant enough. There could be various reasons for this, including increased weekend traffic, alcohol consumption, or time of day. Further analysis is needed to understand the underlying factors that contribute to this pattern.
 
 
 
@@ -237,9 +159,6 @@ We found that Friday and Saturday had higher numbers of accidents per day, but o
 
 
 
-
-
-\newpage
 ### Total injured and killed per borough
 
 ```{r}
@@ -280,15 +199,7 @@ df %>% group_by(BOROUGH) %>%
         axis.ticks.x = element_blank()) 
 ```
 
-We found that Brooklyn had the highest number of accidents, followed by Queens, and we are surprised that Manhattan did not have the highest number, there could be several reasons for this:
-
-- Differences in traffic patterns: Brooklyn and Queens are both large boroughs with a lot of traffic and major highways running through them, which could explain the higher number of accidents. Manhattan, on the other hand, is a smaller borough with fewer highways, which could result in fewer accidents.
-
-- Differences in population density: Another factor that could contribute to differences in the number of accidents is population density. Brooklyn and Queens have a higher population density than Manhattan, which means there are more people and vehicles on the road, increasing the likelihood of accidents.
-
-- Differences in road infrastructure: Road infrastructure can also play a role in the number of accidents. Some areas may have poorly designed roads, confusing intersections, or inadequate signage, which can increase the risk of accidents.
-
-- External factors: It is also possible that external factors such as weather, road conditions, or driver behavior could have influenced the number of accidents in each borough.
+This analysis examines the total number of accidents, injuries, and deaths by borough in NYC. Brooklyn had the highest number of accidents, followed by Queens. Manhattan had a lower number of accidents, which could be due to differences in traffic patterns, population density, or road infrastructure. External factors such as weather, road conditions, or driver behavior may have also influenced the number of accidents in each borough.
 
 
 
@@ -299,10 +210,6 @@ We found that Brooklyn had the highest number of accidents, followed by Queens, 
 
 
 
-
-
-
-\newpage
 ### Total Number of Accidents by Contributing Factor
 
 ```{r }
@@ -328,37 +235,17 @@ df %>% group_by(CONTRIBUTING.FACTOR.VEHICLE.1) %>%
         axis.ticks.x = element_blank())
 ```
 
-We found out that distraction is the higest followed by failed to yield and others, this suggests that policies and interventions aimed at reducing distracted driving and improving yielding behavior could help reduce the number of accidents.
-
-- Public awareness campaigns: The city could launch a public awareness campaign to educate drivers about the risks of distracted driving and the importance of focusing on the road. The campaign could use different channels such as social media, radio, TV, and billboards to reach as many drivers as possible.
-
-- Enforcement of traffic laws: The police department could increase the enforcement of traffic laws related to distracted driving and failing to yield. This could include targeted patrols in areas with high accident rates or increased use of traffic cameras to capture and penalize drivers who violate these laws.
-
-- Infrastructure improvements: The city could invest in infrastructure improvements such as better road markings, traffic signals, and signage to help drivers navigate safely and avoid accidents.
-
-- Driver education: The city could consider incorporating education about distracted driving and yielding behaviors into driver education programs, to ensure that new drivers are aware of the risks and are better prepared to drive safely.
-
-By implementing policies and interventions that address the leading contributing factors to motor vehicle collisions, the city can work towards reducing the number of accidents, injuries, and fatalities on the roads.
+The bar chart shows the total number of accidents by contributing factor, with distraction being the highest followed by failed to yield and others. To reduce the number of accidents, policies and interventions can be implemented such as public awareness campaigns, enforcement of traffic laws, infrastructure improvements, and driver education.
 
 
 
 
 
 
-\newpage
 ### Conclusion
 
-In this project, we analyzed the New York City motor vehicle accidents dataset from 2020 to gain insights into the frequency, distribution, and causes of traffic accidents in the city. We utilized data visualization techniques and statistical analysis to explore various aspects of the data and identify patterns and trends.
-
-We found that the number of accidents in New York City decreased significantly in 2020, which we attributed to the COVID-19 lockdown and other factors such as weather and changes in traffic patterns.
-
-We also found that certain factors such as borough, day of the week, and time of day were associated with a higher probability of accidents. Specifically, Brooklyn and Queens had the highest number of accidents, Fridays and Saturdays had the highest number of accidents per day, and the afternoon and evening had a higher probability of accidents.
-
-Furthermore, we identified several potential factors that could contribute to accidents, including alcohol consumption, traffic congestion, and road infrastructure. We also noted that heteroscedasticity was present in our regression model and used robust standard error estimation to correct for this issue.
-
-Our findings have important implications for policymakers, law enforcement, and public safety officials, who can use this information to develop targeted interventions and strategies to reduce the number of accidents in the city. For example, they can focus on improving road infrastructure, increasing public awareness about the dangers of driving under the influence, and implementing measures to reduce traffic congestion during peak hours.
-
-Overall, our analysis provides a valuable contribution to the ongoing efforts to improve traffic safety in New York City, and our findings can serve as a foundation for future research in this area.
+This project analyzed the 2020 New York City motor vehicle accidents dataset to gain insights into the
+frequency, distribution, and causes of accidents. Although our analysis of the New York City motor vehicle accidents dataset from 2020 identified patterns and trends in accident frequency, distribution, and causes, there are several caveats to consider. While certain factors were associated with a higher probability of accidents, it is challenging to establish a causal relationship between these factors and accidents. Additionally, as a policy conclusion project, our model's accuracy is limited. However, our findings provide policymakers, law enforcement, and public safety officials with valuable information to develop targeted interventions and strategies for how and when to reduce the number of accidents in the city.
 
 
 
